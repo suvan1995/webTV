@@ -247,7 +247,6 @@ class WebActivity : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (!Prefs.safeMode(this)) AdBlocker.init(applicationContext)
 
-        hideSystemBars()
 
         navScript = asset("tvnav.js")
         loginScript = asset("logins.js")
@@ -267,6 +266,7 @@ class WebActivity : Activity() {
         cursor = CursorView(this).apply { isFocusable = false }
         root.addView(cursor, FrameLayout.LayoutParams(cursorSize, cursorSize))
         setContentView(root)
+        hideSystemBars()
 
         setupWebView(web)
         web.webViewClient = PageClient()
@@ -311,7 +311,9 @@ class WebActivity : Activity() {
         }
     }
 
-    private fun hideSystemBars() {
+    private fun hideSystemBars() = try { hideSystemBarsInner() } catch (t: Throwable) { Log.w("WebTV", "system bars", t) }
+
+    private fun hideSystemBarsInner() {
         if (Build.VERSION.SDK_INT >= 30) {
             window.setDecorFitsSystemWindows(false)
             window.insetsController?.let {
