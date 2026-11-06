@@ -1,0 +1,59 @@
+name: TV emulator test
+
+on:
+  workflow_run:
+    workflows: ["Build APK"]
+    types: [completed]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Get APK
+        run: |
+          git clone -q --depth 1 -b builds "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk
+
+      - name: Run on Android TV emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: android-tv
+          arch: x86
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: |
+            mkdir -p results
+            adb logcat -c
+            adb install -r apk/WebTV.apk
+            adb shell am start -n com.example.webtv/.MainActivity
+            sleep 10
+            adb exec-out screencap -p > results/1-setup.png
+            adb shell input text "example.com"
+            sleep 2
+            adb shell input keyevent 66
+            sleep 40
+            adb exec-out screencap -p > results/2-after-url.png
+            adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > results/activity.txt || true
+            adb shell am force-stop com.example.webtv
+            adb shell am start -n com.example.webtv/.MainActivity
+            sleep 25
+            adb exec-out screencap -p > results/3-relaunch.png
+            adb logcat -d > results/logcat.txt
+            adb logcat -d -b crash > results/crash.txt || true
+
+      - name: Save results to the "test-results" branch
+        if: always()
+        run: |
+          mkdir -p results && cd results
+          git init -q -b test-results
+          git add -A
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -q -m "TV test results" --allow-empty
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" test-results
