@@ -28,7 +28,7 @@ jobs:
           target: android-tv
           arch: x86
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -dns-server 8.8.8.8 -noaudio -no-boot-anim -camera-back none
           script: |
             mkdir -p results
             adb logcat -c
@@ -41,6 +41,10 @@ jobs:
             adb shell input keyevent 66
             sleep 40
             adb exec-out screencap -p > results/2-after-url.png
+            adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1 || true
+            adb pull /sdcard/ui.xml results/ui-page.xml || true
+            (adb shell ping -c 2 8.8.8.8; adb shell "toybox nc -z -w 5 example.com 443 && echo tcp443-ok") > results/net.txt 2>&1 || true
+            adb shell dumpsys webviewupdate > results/webview.txt 2>&1 || true
             adb shell dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" > results/activity.txt || true
             adb shell input keyevent 82
             sleep 3
