@@ -1,0 +1,5 @@
+<resources>
+    <dimen name="title_size">36sp</dimen>
+    <dimen name="body_size">18sp</dimen>
+    <dimen name="input_size">22sp</dimen>
+</resources>

@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Web TV</string>
+    <string name="setup_title">Welcome</string>
+    <string name="setup_subtitle">Enter the website address to open as an app. Press OK on the box to type, or use the quick buttons below. You can change it later from the menu.</string>
+    <string name="url_hint">example.com</string>
+    <string name="open">Open</string>
+    <string name="invalid_url">That doesn\'t look like a valid web address.</string>
+    <string name="popup_blocked">Blocked a pop-up</string>
+    <string name="popup_opened">Opened a pop-up window. Press Back to close it.</string>
+    <string name="save_password_title">Save password?</string>
+    <string name="update_password_title">Update saved password?</string>
+    <string name="save_password_msg">Save your login for %1$s? It will be filled in for you next time.</string>
+    <string name="password_saved">Password saved</string>
+    <string name="password_save_failed">Couldn\'t save the password on this TV</string>
+    <string name="saved_passwords">Saved passwords</string>
+    <string name="no_saved_passwords">No saved passwords yet. When you sign in to a site, Web TV offers to save the login.</string>
+    <string name="delete_password_q">Delete this saved login?</string>
+    <string name="sign_out_all">Sign out of all websites?</string>
+    <string name="sign_out_all_msg">This removes all cookies and site data, so every website forgets your login. Saved passwords are kept.</string>
+    <string name="signed_out">Signed out of all websites</string>
+    <string name="applies_after_reload">Applies after the lists reload (a few seconds)</string>
+    <string name="updating_lists">Updating filter lists…</string>
+    <string name="lists_updated">Updated %1$d filter lists</string>
+    <string name="lists_update_failed">Couldn\'t download the filter lists. Check the internet connection.</string>
+</resources>
