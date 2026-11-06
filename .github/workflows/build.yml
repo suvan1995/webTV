@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -35,3 +37,13 @@ jobs:
         with:
           name: WebTV-apk-${{ github.run_number }}
           path: out/*.apk
+
+      - name: Save APK to the "builds" branch
+        run: |
+          cp out/*.apk /tmp/
+          cd /tmp && rm -rf builds && mkdir builds && cd builds
+          git init -q -b builds
+          cp /tmp/WebTV-*.apk WebTV.apk
+          git add WebTV.apk
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -q -m "APK from run ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds
