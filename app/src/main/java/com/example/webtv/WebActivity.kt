@@ -81,6 +81,10 @@ class WebActivity : Activity() {
     private var adblockScript = ""
     private var docStartSupported = false
     private var customView: View? = null
+    /** Fullscreen video: 0 = playback keys, 1 = moving between the player's buttons, 2 = pointer. */
+    private var videoControls = 0
+    private var okLongFired = false
+    private val controlsIdle = Runnable { exitVideoControls() }
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var mode = SMART
     private var errorShown = false
@@ -106,10 +110,13 @@ class WebActivity : Activity() {
                 view, root.indexOfChild(cursor),
                 FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             )
+            videoControls = 0
+            toast(getString(R.string.video_hint))
         }
 
         override fun onHideCustomView() {
             val v = customView ?: return
+            exitVideoControls()
             root.removeView(v)
             customView = null
             active.visibility = View.VISIBLE
@@ -181,7 +188,7 @@ class WebActivity : Activity() {
         @JavascriptInterface
         fun tap(x: Double, y: Double, viewportCssWidth: Double) {
             runOnUiThread {
-                val w = active
+                val w: View = customView ?: active
                 if (viewportCssWidth > 0 && w.width > 0) {
                     val s = w.width / viewportCssWidth.toFloat()
                     sendTap(w, (x * s).toFloat(), (y * s).toFloat())
@@ -312,6 +319,7 @@ class WebActivity : Activity() {
     override fun onBackPressed() {
         val p = popup
         when {
+            customView != null && videoControls != 0 -> exitVideoControls()
             customView != null -> chrome.onHideCustomView()
             p != null -> if (p.canGoBack()) p.goBack() else closePopup()
             web.canGoBack() && !errorShown -> web.goBack()
@@ -589,16 +597,64 @@ class WebActivity : Activity() {
             KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> { if (down) js("window.__tv&&__tv.scroll('down')"); return true }
         }
 
-        // Fullscreen video: OK = play/pause, Left/Right = seek 10s
+        // Hold OK (about a second) anywhere: open the menu. Works even without a Menu key on the remote.
+        val isOk = code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER || code == KeyEvent.KEYCODE_NUMPAD_ENTER
+        if (isOk) {
+            if (down && e.repeatCount == 0) okLongFired = false
+            if (down && e.repeatCount > 0 && !okLongFired &&
+                (e.flags and KeyEvent.FLAG_LONG_PRESS != 0 || e.eventTime - e.downTime >= 800)) {
+                okLongFired = true
+                showMenu()
+                return true
+            }
+            if (okLongFired) { if (up) okLongFired = false; return true }
+            if (down && e.repeatCount > 0) return true
+        }
+
         if (customView != null) {
-            when (code) {
-                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_NUMPAD_ENTER -> {
-                    if (up) toggleOrTapVideo()
-                    return true
+            val dir = when (code) {
+                KeyEvent.KEYCODE_DPAD_UP -> "up"
+                KeyEvent.KEYCODE_DPAD_DOWN -> "down"
+                KeyEvent.KEYCODE_DPAD_LEFT -> "left"
+                KeyEvent.KEYCODE_DPAD_RIGHT -> "right"
+                else -> null
+            }
+            when (videoControls) {
+                // Playback keys: OK = play/pause, Left/Right = seek 10 s, Up/Down = player controls
+                0 -> {
+                    if (isOk) { if (up) toggleOrTapVideo(); return true }
+                    when (dir) {
+                        "left" -> { if (down) mediaAction("rw"); return true }
+                        "right" -> { if (down) mediaAction("ff"); return true }
+                        "up", "down" -> { if (down && e.repeatCount == 0) enterVideoControls(); return true }
+                    }
                 }
-                KeyEvent.KEYCODE_DPAD_LEFT -> { if (down) mediaAction("rw"); return true }
-                KeyEvent.KEYCODE_DPAD_RIGHT -> { if (down) mediaAction("ff"); return true }
-                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> return true
+                // Moving between the player's own buttons with the focus ring
+                1 -> {
+                    if (isOk) { if (up) { js("window.__tv&&__tv.ok()"); bumpVideoControls() }; return true }
+                    if (dir != null) {
+                        if (down) {
+                            val now = SystemClock.uptimeMillis()
+                            if (e.repeatCount == 0 || now - lastNav > 120) {
+                                lastNav = now
+                                js("window.__tv&&__tv.nav('$dir')")
+                            }
+                            bumpVideoControls()
+                        }
+                        return true
+                    }
+                }
+                // Pointer over the player
+                2 -> {
+                    if (isOk) {
+                        if (up) { customView?.let { sendTap(it, cx, cy) }; bumpVideoControls() }
+                        return true
+                    }
+                    if (dir != null) {
+                        if (down) { moveCursor(code, e.repeatCount); js("window.__tv&&__tv.wake()"); bumpVideoControls() }
+                        return true
+                    }
+                }
             }
             return super.dispatchKeyEvent(e)
         }
@@ -640,6 +696,38 @@ class WebActivity : Activity() {
             }
         }
         return super.dispatchKeyEvent(e)
+    }
+
+    private fun enterVideoControls() {
+        active.evaluateJavascript("window.__tv ? __tv.fsControls() : 0") { r ->
+            if (customView == null) return@evaluateJavascript
+            val n = r?.trim('"')?.toIntOrNull() ?: 0
+            if (n > 0) {
+                videoControls = 1
+            } else {
+                // The player's buttons aren't reachable from the page (e.g. a plain <video>): use a pointer.
+                videoControls = 2
+                cx = root.width / 2f
+                cy = root.height * 0.85f
+                updateCursor()
+                cursor.visibility = View.VISIBLE
+            }
+            toast(getString(R.string.video_controls_hint))
+            bumpVideoControls()
+        }
+    }
+
+    private fun bumpVideoControls() {
+        root.removeCallbacks(controlsIdle)
+        root.postDelayed(controlsIdle, 15000)
+    }
+
+    private fun exitVideoControls() {
+        root.removeCallbacks(controlsIdle)
+        if (videoControls == 0) return
+        videoControls = 0
+        cursor.visibility = if (mode == CURSOR) View.VISIBLE else View.GONE
+        js("window.__tv&&__tv.clearFocus()")
     }
 
     private fun toggleOrTapVideo() {
@@ -846,7 +934,9 @@ class WebActivity : Activity() {
                 "Red: reload\n" +
                 "Play/Pause, Fast-forward, Rewind: control video\n" +
                 "Channel +/- or Page Up/Down: scroll\n" +
-                "Fullscreen video: OK = play/pause, Left/Right = 10 s seek\n\n" +
+                "Fullscreen video: OK = play/pause, Left/Right = 10 s seek,\n" +
+                "  Down = player buttons (quality, subtitles...), Back = return\n" +
+                "Hold OK: open this menu (anywhere, even during video)\n\n" +
                 "You stay signed in to websites until you sign out on the site " +
                 "(or use \"Sign out of all websites\" in this menu).\n\n" +
                 "If a site doesn't respond well, change Navigation to Cursor from the menu. " +

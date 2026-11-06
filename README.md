@@ -23,7 +23,9 @@ All builds are signed with `app/webtv-release.jks`, so a new APK installs over t
 - Back: previous page; on the first page it opens the menu
 - Menu / Info / Settings / Yellow: open the menu. Red: reload
 - Play/Pause, Fast-forward, Rewind: control the video; Channel +/- or Page Up/Down: scroll
-- Fullscreen video: OK = play/pause, Left/Right = seek 10 s
+- Fullscreen video: OK = play/pause, Left/Right = seek 10 s, Down (or Up) = move between the player's own buttons
+  (quality, subtitles, next, exit fullscreen...) with OK to press them; Back returns to the video
+- Hold OK (about a second), anywhere: open the menu
 - Blue: Shields (ad blocker) options
 - Menu > Navigation: Smart focus (default) / Cursor / Native
 

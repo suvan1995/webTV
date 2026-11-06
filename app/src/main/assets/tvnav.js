@@ -17,8 +17,14 @@
     'pointer-events:none;box-sizing:border-box;border:4px solid #4F8CFF;border-radius:10px;' +
     'box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 18px 6px rgba(79,140,255,.6);';
 
+  // While a player is fullscreen only its subtree is visible, so navigation and the ring live there.
+  function fsEl() {
+    var f = document.fullscreenElement || document.webkitFullscreenElement || null;
+    return f && f.tagName !== 'VIDEO' ? f : null;
+  }
+
   function mountRing() {
-    var p = document.documentElement;
+    var p = fsEl() || document.documentElement;
     if (p && ring.parentNode !== p) p.appendChild(ring);
   }
 
@@ -59,9 +65,10 @@
       seen.add(el);
       out.push({ el: el, r: r, ptr: ptr, s: 0 });
     }
-    var els = document.querySelectorAll(SEL);
-    for (i = 0; i < els.length; i++) push(els[i], false);
-    var pe = document.querySelectorAll(POINTER_TAGS);
+    var root = fsEl() || document;
+    var els = root.querySelectorAll(SEL);
+    for (i = 0; i < els.length; i++) if (!(root !== document && els[i].tagName === 'VIDEO')) push(els[i], false);
+    var pe = root.querySelectorAll(POINTER_TAGS);
     if (pe.length < 8000) for (i = 0; i < pe.length; i++) push(pe[i], true);
     return out;
   }
@@ -103,6 +110,40 @@
     return Math.max(0, r.top + r.height / 2) + Math.abs((r.left + r.right) / 2 - v.w / 2) * 0.5;
   }
 
+  // First control in a fullscreen player: the bottom control bar, from the left (play button / progress bar).
+  function fsInitScore(r, v) {
+    if (r.bottom <= 0 || r.top >= v.h || r.right <= 0 || r.left >= v.w) return -1;
+    return Math.max(0, v.h - r.bottom) + Math.max(0, r.left) * 0.3;
+  }
+
+  // Players hide their controls after a few seconds without mouse movement.
+  function wake() {
+    var f = fsEl() || video();
+    if (!f) return;
+    var r = f.getBoundingClientRect();
+    var x = r.left + r.width / 2, y = r.top + r.height * 0.6;
+    ['pointermove', 'mousemove', 'mouseover'].forEach(function (t) {
+      try { f.dispatchEvent(new MouseEvent(t, { bubbles: true, clientX: x, clientY: y, view: window })); } catch (e) {}
+    });
+  }
+
+  /** Enter "player controls": focus the first control of the fullscreen player. Returns how many there are. */
+  function fsControls() {
+    if (!fsEl()) return 0;
+    wake();
+    mountRing();
+    cur = null;
+    var v = vp(), list = collect(v), n = 0, i;
+    for (i = 0; i < list.length; i++) if (usable(list[i], v)) n++;
+    if (n) move('down', false);
+    return n;
+  }
+
+  function clearFocus() {
+    cur = null;
+    ring.style.display = 'none';
+  }
+
   function usable(c, v) {
     var el = c.el, cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none' || parseFloat(cs.opacity) < 0.05 ||
@@ -136,6 +177,7 @@
   }
 
   function reveal(el) {
+    if (fsEl()) return;
     try { el.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'instant' }); }
     catch (e) { try { el.scrollIntoView(false); } catch (e2) {} }
     var r = el.getBoundingClientRect(), v = vp();
@@ -185,7 +227,7 @@
     for (i = 0; i < list.length; i++) {
       c = list[i];
       if (c.el === cur) continue;
-      s = from ? score(from, c.r, dir) : initScore(c.r, v);
+      s = from ? score(from, c.r, dir) : (fsEl() ? fsInitScore(c.r, v) : initScore(c.r, v));
       if (s >= 0) { c.s = s; scored.push(c); }
     }
     scored.sort(function (a, b) { return a.s - b.s; });
@@ -322,7 +364,10 @@
   setInterval(place, 120);
 
   window.__tv = {
-    nav: function (d) { move(d, true); },
+    nav: function (d) { wake(); move(d, !fsEl()); },
+    fsControls: fsControls,
+    clearFocus: clearFocus,
+    wake: wake,
     ok: ok,
     setText: setText,
     media: media,

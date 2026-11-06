@@ -22,4 +22,6 @@
     <string name="updating_lists">Updating filter lists…</string>
     <string name="lists_updated">Updated %1$d filter lists</string>
     <string name="lists_update_failed">Couldn\'t download the filter lists. Check the internet connection.</string>
+    <string name="video_hint">▼ Player buttons  ·  Hold OK: menu  ·  ◀ ▶ Skip 10 s</string>
+    <string name="video_controls_hint">Player buttons: arrows to move, OK to press, Back to return to the video</string>
 </resources>
