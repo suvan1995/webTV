@@ -612,6 +612,11 @@ class WebActivity : Activity() {
         }
 
         if (customView != null) {
+            // The fullscreen video view handles Back itself (it leaves fullscreen), so take it first.
+            if (code == KeyEvent.KEYCODE_BACK && videoControls != 0) {
+                if (up) exitVideoControls()
+                return true
+            }
             val dir = when (code) {
                 KeyEvent.KEYCODE_DPAD_UP -> "up"
                 KeyEvent.KEYCODE_DPAD_DOWN -> "down"

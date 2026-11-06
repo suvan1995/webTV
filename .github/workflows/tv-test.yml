@@ -81,6 +81,7 @@ jobs:
             adb exec-out screencap -p > results/v3-moved.png
             adb shell input keyevent 23; sleep 2
             adb shell input keyevent 4; sleep 2
+            adb exec-out screencap -p > results/v3b-back-still-fullscreen.png
             adb shell input keyevent --longpress 23; sleep 3
             adb exec-out screencap -p > results/v4-longpress-menu.png
             adb shell input keyevent 4; sleep 2
