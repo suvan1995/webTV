@@ -21,6 +21,21 @@ jobs:
         run: |
           git clone -q --depth 1 -b builds "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk
 
+      - name: Local test page
+        run: |
+          mkdir -p site
+          cat > site/index.html <<'HTML'
+          <!doctype html><html><head><title>Shields test</title>
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script></head>
+          <body style="background:#fff;font-size:40px"><h1>Hello from the test page</h1>
+          <div class="adsbygoogle" data-ad-client="ca-pub-1" style="display:block;height:90px;background:red">AD BOX SHOULD BE HIDDEN</div>
+          <div id="ad_top" style="height:90px;background:orange">AD TOP SHOULD BE HIDDEN</div>
+          <form><input type="email" name="email" placeholder="Email"><input type="password" name="pw">
+          <label><input type="checkbox" name="remember"> Remember me</label></form>
+          <p>End of page</p></body></html>
+          HTML
+          cd site && nohup python3 -m http.server 8000 >/dev/null 2>&1 &
+
       - name: Run on Android TV emulator
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -36,7 +51,7 @@ jobs:
             adb shell am start -n com.example.webtv/.MainActivity
             sleep 10
             adb exec-out screencap -p > results/1-setup.png
-            adb shell input text "example.com"
+            adb shell input text "http://10.0.2.2:8000/"
             sleep 2
             adb shell input keyevent 66
             sleep 40
@@ -52,6 +67,7 @@ jobs:
             adb shell input keyevent 4
             sleep 2
             adb shell am force-stop com.example.webtv
+            adb shell "toybox wget -q -O - http://example.com 2>&1 | head -c 200" > results/internet.txt 2>&1 || true
             adb shell am start -n com.example.webtv/.MainActivity
             sleep 25
             adb exec-out screencap -p > results/3-relaunch.png

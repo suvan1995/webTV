@@ -160,6 +160,12 @@ class WebActivity : Activity() {
             return true
         }
 
+        override fun onConsoleMessage(m: android.webkit.ConsoleMessage): Boolean {
+            if (m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
+                Log.w("WebTV", "console: ${m.message()} @${m.sourceId()}:${m.lineNumber()}")
+            return false
+        }
+
         override fun onCloseWindow(window: WebView) {
             if (window === popup) closePopup()
         }
@@ -219,6 +225,7 @@ class WebActivity : Activity() {
         override fun onPageCommitVisible(view: WebView, url: String?) = inject(view, false)
 
         override fun onPageFinished(view: WebView, url: String?) {
+            Log.i("WebTV", "page finished: $url (blocked ${AdBlocker.pageBlocked.get()})")
             inject(view, false)
             CookieManager.getInstance().flush()
         }
@@ -228,6 +235,7 @@ class WebActivity : Activity() {
         }
 
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
+            if (request.isForMainFrame) Log.w("WebTV", "page error ${error.errorCode} ${error.description} for ${request.url}")
             if (request.isForMainFrame && view === web) {
                 errorShown = true
                 val html = "<html><body style='background:#0f1014;color:#fff;font-family:sans-serif;" +
