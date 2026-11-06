@@ -1,0 +1,1 @@
+    mResumedActivity: ActivityRecord{63d6402 u0 com.example.webtv/.WebActivity t5}

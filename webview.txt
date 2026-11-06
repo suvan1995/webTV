@@ -1,0 +1,18 @@
+Current WebView Update Service state
+  Fallback logic enabled: false
+  Multiprocess enabled: true
+  Current WebView package (name, version): (com.google.android.webview, 90.0.4430.91)
+  Minimum targetSdkVersion: 30
+  Minimum WebView version code: 443009131
+  Number of relros started: 1
+  Number of relros finished: 1
+  WebView package dirty: false
+  Any WebView package installed: true
+  Preferred WebView package (name, version): (com.google.android.webview, 90.0.4430.91)
+  WebView packages:
+    Valid package com.google.android.webview (versionName: 90.0.4430.91, versionCode: 443009131, targetSdkVersion: 30) is  installed/enabled for all users
+    com.google.android.webview.beta is NOT installed.
+    com.google.android.webview.dev is NOT installed.
+    com.google.android.webview.canary is NOT installed.
+    com.google.android.webview.debug is NOT installed.
+    com.android.webview is NOT installed.
