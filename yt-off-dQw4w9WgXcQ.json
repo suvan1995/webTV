@@ -1,0 +1,368 @@
+{
+ "summary": {
+  "samples": 25,
+  "adShowingSamples": 0,
+  "adUiSamples": 0,
+  "maxInitialAds": 0,
+  "maxPlayerAds": 0,
+  "lastVideo": {
+   "t": 80,
+   "d": 213,
+   "paused": false,
+   "muted": true
+  },
+  "lastUrl": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD"
+ },
+ "samples": [
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 8,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 11,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 14,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 17,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 20,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 23,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 26,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 29,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 32,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 35,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 38,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 41,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 44,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 47,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 50,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 53,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 56,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 59,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 62,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 65,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 68,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 71,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 74,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 77,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  },
+  {
+   "url": "https://m.youtube.com/watch?v=dQw4w9WgXcQ&pp=0gcJCVgCo7VqN5tD",
+   "adShowing": false,
+   "adUi": false,
+   "initialAds": 0,
+   "playerAds": 0,
+   "video": {
+    "t": 80,
+    "d": 213,
+    "paused": false,
+    "muted": true
+   },
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster) - YouTube"
+  }
+ ]
+}
