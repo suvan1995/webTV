@@ -29,6 +29,16 @@ All builds are signed with `app/webtv-release.jks`, so a new APK installs over t
 - Blue: Shields (ad blocker) options
 - Menu > Navigation: Smart focus (default) / Cursor / Native
 
+## Menu extras
+- **Websites**: keep several sites and switch between them (add / remove from the same list). Each site
+  reopens on the page you were last on; "Go to home page" jumps back to its start page.
+- **Navigation** mode (Smart focus / Cursor / Native) is remembered per website.
+- **Desktop version of this site**: for sites that show a cramped phone layout.
+- **Text size**: 85% to 175%.
+- The TV's screensaver works normally; the screen only stays awake while a video is playing.
+- A thin blue bar at the top shows page loading. On sites that draw their own TV focus highlight,
+  the app's blue ring steps aside.
+
 ## Shields (built-in ad blocker)
 Works like Brave Shields and uses the same default filter lists Brave ships:
 EasyList, EasyPrivacy, uBlock Origin (filters, badware, privacy, unbreak, quick fixes),

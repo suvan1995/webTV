@@ -141,6 +141,7 @@
 
   function clearFocus() {
     cur = null;
+    ownHighlight = false;
     ring.style.display = 'none';
   }
 
@@ -188,8 +189,25 @@
     if (dy) window.scrollBy(0, dy);
   }
 
+  // True when the page draws its own highlight for the element we moved to (TV-friendly sites).
+  var ownHighlight = false;
+  var STYLE_KEYS = ['outlineStyle', 'outlineWidth', 'outlineColor', 'boxShadow', 'backgroundColor',
+    'borderTopColor', 'color', 'transform', 'opacity', 'textDecorationLine', 'filter'];
+  function look(el) {
+    try {
+      var cs = getComputedStyle(el), out = [];
+      for (var i = 0; i < STYLE_KEYS.length; i++) out.push(cs[STYLE_KEYS[i]]);
+      return out.join('|');
+    } catch (e) { return ''; }
+  }
+  function canFocus(el) {
+    var t = el.tagName;
+    if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT' || el.isContentEditable) return false; // would pop the keyboard
+    return t === 'A' || t === 'BUTTON' || el.hasAttribute('tabindex') || t === 'SUMMARY';
+  }
+
   function place() {
-    if (!cur || !document.contains(cur)) { ring.style.display = 'none'; return; }
+    if (!cur || !document.contains(cur) || ownHighlight) { ring.style.display = 'none'; return; }
     var r = cur.getBoundingClientRect();
     if (r.width < 1 || r.height < 1) { ring.style.display = 'none'; return; }
     var p = 3;
@@ -204,7 +222,11 @@
     if (prevHover && prevHover !== el) fire(prevHover, ['pointerout', 'mouseout', 'mouseleave']);
     cur = el; prevHover = el;
     reveal(el);
+    var before = look(el);
     fire(el, ['pointerover', 'mouseover', 'mouseenter', 'mousemove']);
+    if (canFocus(el)) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+    var after = look(el);
+    ownHighlight = !fsEl() && before !== '' && after !== before;
     place();
   }
 
@@ -366,6 +388,15 @@
   window.__tv = {
     nav: function (d) { wake(); move(d, !fsEl()); },
     fsControls: fsControls,
+    /** "1" while any video on the page is actually playing (keeps the TV screen awake). */
+    playing: function () {
+      var vs = document.querySelectorAll('video, audio');
+      for (var i = 0; i < vs.length; i++) {
+        var m = vs[i];
+        if (!m.paused && !m.ended && m.readyState > 2) return 1;
+      }
+      return 0;
+    },
     clearFocus: clearFocus,
     wake: wake,
     ok: ok,

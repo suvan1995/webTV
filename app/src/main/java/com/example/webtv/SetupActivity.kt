@@ -27,7 +27,9 @@ class SetupActivity : Activity() {
         val open = findViewById<Button>(R.id.open)
         val chips = findViewById<LinearLayout>(R.id.chips)
 
-        Prefs.getUrl(this)?.let { field.setText(it) }
+        // "Add a site" from the menu starts with an empty box; first run shows the current site.
+        val adding = intent.getBooleanExtra("add", false)
+        if (!adding) Prefs.getUrl(this)?.let { field.setText(it) }
         field.setSelection(field.text.length)
 
         // Quick-type buttons so you rarely need the on-screen keyboard for the boring parts.
@@ -60,8 +62,9 @@ class SetupActivity : Activity() {
             }
             (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
                 .hideSoftInputFromWindow(field.windowToken, 0)
-            Prefs.setUrl(this, url)
-            startActivity(Intent(this, WebActivity::class.java))
+            Prefs.addSite(this, url)
+            startActivity(Intent(this, WebActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
             finish()
         }
 

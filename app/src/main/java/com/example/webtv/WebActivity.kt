@@ -34,6 +34,8 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.content.res.ColorStateList
 import android.widget.Toast
 import android.app.Activity
 import android.app.AlertDialog
@@ -81,6 +83,16 @@ class WebActivity : Activity() {
     private var adblockScript = ""
     private var docStartSupported = false
     private var customView: View? = null
+    private lateinit var progress: ProgressBar
+    private var mobileUa = ""
+    private var desktopUa = ""
+    private var screenAwake = false
+    private val awakeCheck = object : Runnable {
+        override fun run() {
+            checkPlaying()
+            root.postDelayed(this, 5000)
+        }
+    }
     /** Fullscreen video: 0 = playback keys, 1 = moving between the player's buttons, 2 = pointer. */
     private var videoControls = 0
     private var okLongFired = false
@@ -111,6 +123,8 @@ class WebActivity : Activity() {
                 FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             )
             videoControls = 0
+            progress.visibility = View.GONE
+            setAwake(true)
             toast(getString(R.string.video_hint))
         }
 
@@ -167,6 +181,12 @@ class WebActivity : Activity() {
             return true
         }
 
+        override fun onProgressChanged(view: WebView, newProgress: Int) {
+            if (view !== active) return
+            progress.progress = newProgress
+            progress.visibility = if (newProgress in 1..99 && customView == null) View.VISIBLE else View.GONE
+        }
+
         override fun onConsoleMessage(m: android.webkit.ConsoleMessage): Boolean {
             if (m.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR)
                 Log.w("WebTV", "console: ${m.message()} @${m.sourceId()}:${m.lineNumber()}")
@@ -210,7 +230,8 @@ class WebActivity : Activity() {
             if (s != "http" && s != "https") return true
             if (request.isForMainFrame && request.method == "GET") {
                 val clean = stripTracking(uri)
-                if (clean != null) { view.loadUrl(clean); return true }
+                if (clean != null) { applyUa(view, clean); view.loadUrl(clean); return true }
+                if (applyUa(view, uri.toString())) { view.loadUrl(uri.toString()); return true }
             }
             return false
         }
@@ -234,6 +255,9 @@ class WebActivity : Activity() {
         override fun onPageFinished(view: WebView, url: String?) {
             Log.i("WebTV", "page finished: $url (blocked ${AdBlocker.pageBlocked.get()})")
             inject(view, false)
+            if (view === web && !errorShown && url != null && url.startsWith("http")) {
+                Prefs.getUrl(this@WebActivity)?.let { home -> Prefs.setLastPage(this@WebActivity, home, url) }
+            }
             CookieManager.getInstance().flush()
         }
 
@@ -259,7 +283,6 @@ class WebActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (!Prefs.safeMode(this)) AdBlocker.init(applicationContext)
 
 
@@ -276,6 +299,15 @@ class WebActivity : Activity() {
             isFocusableInTouchMode = true
         }
         root.addView(web, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+
+        progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+            max = 100
+            isIndeterminate = false
+            progressTintList = ColorStateList.valueOf(Color.parseColor("#4F8CFF"))
+            progressBackgroundTintList = ColorStateList.valueOf(Color.TRANSPARENT)
+            visibility = View.GONE
+        }
+        root.addView(progress, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4).toInt()))
 
         cursorSize = dp(26).toInt()
         cursor = CursorView(this).apply { isFocusable = false }
@@ -298,7 +330,7 @@ class WebActivity : Activity() {
         }
 
 
-        mode = Prefs.mode(this)
+        mode = Prefs.siteMode(this, Prefs.getUrl(this))
         applyMode()
         root.post {
             cx = root.width / 2f
@@ -311,7 +343,7 @@ class WebActivity : Activity() {
             Prefs.setHinted(this)
         }
 
-        web.loadUrl(Prefs.getUrl(this) ?: "about:blank")
+        openSite(Prefs.getUrl(this), resume = true)
         web.requestFocus()
     }
 
@@ -371,7 +403,13 @@ class WebActivity : Activity() {
             setSupportMultipleWindows(true)
             javaScriptCanOpenWindowsAutomatically = false
             // Look like regular Chrome: some sites (and Google sign-in) refuse the WebView markers.
-            userAgentString = userAgentString.replace("; wv", "").replace(Regex(" Version/\\d+(\\.\\d+)*"), "")
+            if (mobileUa.isEmpty()) {
+                mobileUa = userAgentString.replace("; wv", "").replace(Regex(" Version/\\d+(\\.\\d+)*"), "")
+                val chrome = Regex("Chrome/[\\d.]+").find(mobileUa)?.value ?: "Chrome/120.0.0.0"
+                desktopUa = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) $chrome Safari/537.36"
+            }
+            userAgentString = mobileUa
+            textZoom = Prefs.textZoom(this@WebActivity)
         }
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
@@ -518,7 +556,7 @@ class WebActivity : Activity() {
                     WebStorage.getInstance().deleteAllData()
                     web.clearCache(true)
                     toast(getString(R.string.signed_out))
-                    web.loadUrl(Prefs.getUrl(this) ?: "about:blank")
+                    openSite(Prefs.getUrl(this), resume = false)
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -797,9 +835,100 @@ class WebActivity : Activity() {
         else -> "Native"
     }
 
+    /** Uses the desktop or TV/phone version of a site as chosen. Returns true when it changed. */
+    private fun applyUa(view: WebView, url: String?): Boolean {
+        if (desktopUa.isEmpty()) return false
+        val want = if (Prefs.isDesktop(this, url)) desktopUa else mobileUa
+        if (view.settings.userAgentString == want) return false
+        view.settings.userAgentString = want
+        return true
+    }
+
+    /** Opens a saved website, on the page you last had open there unless [resume] is false. */
+    private fun openSite(home: String?, resume: Boolean) {
+        closePopup()
+        if (home == null) { web.loadUrl("about:blank"); return }
+        val start = if (resume) Prefs.lastPage(this, home)?.takeIf { Prefs.sameSite(it, home) } ?: home else home
+        applyUa(web, start)
+        web.loadUrl(start)
+    }
+
+    private fun switchSite(home: String) {
+        Prefs.setUrl(this, home)
+        mode = Prefs.siteMode(this, home)
+        applyMode()
+        web.clearHistory()
+        openSite(home, resume = true)
+        web.postDelayed({ web.clearHistory() }, 1500)
+    }
+
+    private fun showSites() {
+        val sites = Prefs.sites(this)
+        val cur = Prefs.getUrl(this)
+        val labels = sites.map { (if (it == cur) "▶  " else "     ") + Prefs.siteName(it) }.toMutableList()
+        labels.add("+  Add a website")
+        if (sites.size > 1) labels.add("−  Remove a website")
+        AlertDialog.Builder(this)
+            .setTitle("Websites")
+            .setItems(labels.toTypedArray()) { _, which ->
+                when {
+                    which < sites.size -> if (sites[which] != cur) switchSite(sites[which])
+                    which == sites.size -> startActivity(Intent(this, SetupActivity::class.java).putExtra("add", true))
+                    else -> {
+                        val names = sites.map { Prefs.siteName(it) }.toTypedArray()
+                        AlertDialog.Builder(this).setTitle("Remove which website?")
+                            .setItems(names) { _, i ->
+                                val wasCurrent = sites[i] == cur
+                                Prefs.removeSite(this, sites[i])
+                                toast("Removed ${names[i]}")
+                                if (wasCurrent) Prefs.getUrl(this)?.let { switchSite(it) }
+                            }
+                            .setNegativeButton("Cancel", null).show()
+                    }
+                }
+            }
+            .show()
+    }
+
+    private fun showTextSize() {
+        val sizes = intArrayOf(85, 100, 115, 130, 150, 175)
+        val current = Prefs.textZoom(this)
+        val labels = sizes.map { (if (it == current) "▶  " else "     ") + "$it%" + if (it == 100) "  (normal)" else "" }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle("Text size")
+            .setItems(labels) { _, i ->
+                Prefs.setTextZoom(this, sizes[i])
+                web.settings.textZoom = sizes[i]
+                popup?.settings?.textZoom = sizes[i]
+            }
+            .show()
+    }
+
+    private fun toggleDesktop() {
+        val url = active.url
+        val on = !Prefs.isDesktop(this, url)
+        Prefs.setDesktop(this, url, on)
+        applyUa(active, url)
+        active.reload()
+        toast(if (on) "Showing the desktop version of ${Prefs.host(url)}" else "Showing the TV/mobile version of ${Prefs.host(url)}")
+    }
+
+    /** Keep the TV awake only while a video is playing, so the screensaver can come on otherwise. */
+    private fun checkPlaying() {
+        if (customView != null) { setAwake(true); return }
+        active.evaluateJavascript("window.__tv&&__tv.playing?__tv.playing():0") { r -> setAwake(r?.trim('"') == "1") }
+    }
+
+    private fun setAwake(on: Boolean) {
+        if (on == screenAwake) return
+        screenAwake = on
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
     private fun reloadPage() {
         if (popup != null) { active.reload(); return }
-        if (errorShown) web.loadUrl(Prefs.getUrl(this) ?: "about:blank") else web.reload()
+        if (errorShown) openSite(Prefs.getUrl(this), resume = false) else web.reload()
     }
 
     // ---------- Typing ----------
@@ -883,47 +1012,36 @@ class WebActivity : Activity() {
     // ---------- Menu ----------
 
     private fun showMenu() {
+        val url = active.url
         val shieldsLabel = if (!AdBlocker.isEnabled(this)) "Shields: OFF"
-            else if (AdBlocker.isSiteAllowed(this, active.url)) "Shields: down for this site"
+            else if (AdBlocker.isSiteAllowed(this, url)) "Shields: down for this site"
             else "Shields: ${AdBlocker.pageBlocked.get()} ads & trackers blocked here"
-        val items = arrayOf(
-            "Resume",
-            "Reload page",
-            "Go to home page",
-            "$shieldsLabel  (select for options)",
-            "Navigation: ${modeName()}  (select to change)",
-            "Saved passwords",
-            "Sign out of all websites",
-            "Remote help",
-            "Change website",
-            "Exit app"
+        val site = Prefs.siteName(Prefs.getUrl(this) ?: "")
+        val items = listOf<Pair<String, () -> Unit>>(
+            "Resume" to {},
+            "Reload page" to { reloadPage() },
+            "Go to home page" to { openSite(Prefs.getUrl(this), resume = false) },
+            "Websites: $site  (switch / add)" to { showSites() },
+            "$shieldsLabel  (select for options)" to { showShields() },
+            "Navigation: ${modeName()}  (select to change)" to {
+                mode = (mode + 1) % 3
+                Prefs.setSiteMode(this, Prefs.getUrl(this), mode)
+                applyMode()
+                toast("Navigation for $site: ${modeName()}")
+            },
+            "Desktop version of this site: " + (if (Prefs.isDesktop(this, url)) "ON" else "OFF") to { toggleDesktop() },
+            "Text size: ${Prefs.textZoom(this)}%" to { showTextSize() },
+            "Saved passwords" to { showSavedLogins() },
+            "Sign out of all websites" to { signOutEverywhere() },
+            "Remote help" to { showHelp() },
+            "Exit app" to {
+                CookieManager.getInstance().flush()
+                finishAffinity()
+            }
         )
         AlertDialog.Builder(this)
             .setTitle(R.string.app_name)
-            .setItems(items) { _, which ->
-                when (which) {
-                    1 -> reloadPage()
-                    2 -> { closePopup(); web.loadUrl(Prefs.getUrl(this) ?: "about:blank") }
-                    3 -> showShields()
-                    4 -> {
-                        mode = (mode + 1) % 3
-                        Prefs.setMode(this, mode)
-                        applyMode()
-                        Toast.makeText(this, "Navigation: ${modeName()}", Toast.LENGTH_SHORT).show()
-                    }
-                    5 -> showSavedLogins()
-                    6 -> signOutEverywhere()
-                    7 -> showHelp()
-                    8 -> {
-                        startActivity(Intent(this, SetupActivity::class.java))
-                        finish()
-                    }
-                    9 -> {
-                        CookieManager.getInstance().flush()
-                        finishAffinity()
-                    }
-                }
-            }
+            .setItems(items.map { it.first }.toTypedArray()) { _, which -> items[which].second() }
             .show()
     }
 
@@ -944,7 +1062,8 @@ class WebActivity : Activity() {
                 "Hold OK: open this menu (anywhere, even during video)\n\n" +
                 "You stay signed in to websites until you sign out on the site " +
                 "(or use \"Sign out of all websites\" in this menu).\n\n" +
-                "If a site doesn't respond well, change Navigation to Cursor from the menu. " +
+                "If a site doesn't respond well, change Navigation to Cursor from the menu (it's remembered per website). " +
+                "If a site looks cramped, try \"Desktop version of this site\". " +
                 "If a site breaks, turn Shields down for that site."
             )
             .setPositiveButton("Close", null)
@@ -957,9 +1076,13 @@ class WebActivity : Activity() {
         super.onResume()
         web.onResume()
         popup?.onResume()
+        root.removeCallbacks(awakeCheck)
+        root.postDelayed(awakeCheck, 3000)
     }
 
     override fun onPause() {
+        root.removeCallbacks(awakeCheck)
+        setAwake(false)
         popup?.onPause()
         web.onPause()
         // Write cookies (logins) to disk now: the TV may kill the app at any moment once it's in the background.
