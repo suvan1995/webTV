@@ -18,9 +18,9 @@ jobs:
 
       - name: Internet proxy for the emulator
         run: |
-          sudo apt-get install -y -q tinyproxy >/dev/null
-          printf 'Port 8888\nListen 127.0.0.1\nTimeout 600\nAllow 127.0.0.1\nMaxClients 200\nConnectPort 443\nConnectPort 80\n' | sudo tee /etc/tinyproxy/tinyproxy.conf
-          sudo systemctl restart tinyproxy
+          pip install -q proxy.py
+          nohup proxy --hostname 127.0.0.1 --port 8888 --timeout 600 > /tmp/proxy.log 2>&1 &
+          for i in $(seq 1 20); do curl -s -o /dev/null -x http://127.0.0.1:8888 https://www.youtube.com/ && break; sleep 1; done
           curl -s -o /dev/null -w 'proxy check: %{http_code}\n' -x http://127.0.0.1:8888 https://www.youtube.com/
 
       - name: Get APK
