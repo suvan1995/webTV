@@ -26,24 +26,26 @@ jobs:
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Build release APK
-        run: gradle :app:assembleRelease --no-daemon --stacktrace
+        run: gradle :app:assembleRelease :app:assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
         run: |
           mkdir -p out
           cp app/build/outputs/apk/release/*.apk "out/WebTV-${GITHUB_RUN_NUMBER}.apk"
+          cp app/build/outputs/apk/debug/*.apk out/WebTV-debug.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: WebTV-apk-${{ github.run_number }}
-          path: out/*.apk
+          path: out/WebTV-${{ github.run_number }}.apk
 
       - name: Save APK to the "builds" branch
         run: |
           cp out/*.apk /tmp/
           cd /tmp && rm -rf builds && mkdir builds && cd builds
           git init -q -b builds
-          cp /tmp/WebTV-*.apk WebTV.apk
-          git add WebTV.apk
+          cp $(ls /tmp/WebTV-*.apk | grep -v debug) WebTV.apk
+          cp /tmp/WebTV-debug.apk WebTV-debug.apk
+          git add WebTV.apk WebTV-debug.apk
           git -c user.name="github-actions" -c user.email="actions@github.com" commit -q -m "APK from run ${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds

@@ -1,0 +1,50 @@
+name: YouTube ad test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  youtube:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+
+      - name: Internet proxy for the emulator
+        run: |
+          sudo apt-get install -y -q tinyproxy >/dev/null
+          printf 'Port 8888\nListen 127.0.0.1\nTimeout 600\nAllow 127.0.0.1\nMaxClients 200\nConnectPort 443\nConnectPort 80\n' | sudo tee /etc/tinyproxy/tinyproxy.conf
+          sudo systemctl restart tinyproxy
+          curl -s -o /dev/null -w 'proxy check: %{http_code}\n' -x http://127.0.0.1:8888 https://www.youtube.com/
+
+      - name: Get APK
+        run: git clone -q --depth 1 -b builds "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" apk
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Play YouTube on the Android TV emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: android-tv
+          arch: x86
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -http-proxy http://127.0.0.1:8888
+          script: bash .github/scripts/yt-test.sh
+
+      - name: Save results to the "youtube-results" branch
+        if: always()
+        run: |
+          mkdir -p results && cd results
+          git init -q -b youtube-results
+          git add -A
+          git -c user.name="github-actions" -c user.email="actions@github.com" commit -q -m "YouTube test results" --allow-empty
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" youtube-results
