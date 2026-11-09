@@ -23,7 +23,9 @@ for MODE in off on; do
     sleep 12
     PID=$(adb shell pidof $PKG | tr -d '\r')
     adb forward --remove-all
-    adb forward tcp:9222 localabstract:webview_devtools_remote_$PID
+    SOCK=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1)
+    echo "devtools socket: $SOCK" >> results/sockets.txt
+    adb forward tcp:9222 localabstract:${SOCK:-webview_devtools_remote_$PID}
     node .github/scripts/yt-probe.js results/yt-$MODE-$V.json 75 &
     PROBE=$!
     sleep 20; adb exec-out screencap -p > results/yt-$MODE-$V-a.png

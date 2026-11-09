@@ -15,6 +15,10 @@ class WebTvApp : Application() {
     override fun onCreate() {
         super.onCreate()
         installCrashRecorder(this)
+        // Test builds only (debuggable): lets the automated YouTube test inspect the page.
+        if (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            try { android.webkit.WebView.setWebContentsDebuggingEnabled(true) } catch (t: Throwable) {}
+        }
         // Start loading the ad-block filter lists right away, so they're ready by the time the page loads.
         if (!Prefs.safeMode(this)) AdBlocker.init(this)
     }
