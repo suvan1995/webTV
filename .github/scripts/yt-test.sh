@@ -26,7 +26,7 @@ for MODE in off on; do
     SOCK=$(adb shell cat /proc/net/unix | grep -o 'webview_devtools_remote_[0-9]*' | head -1)
     echo "devtools socket: $SOCK" >> results/sockets.txt
     adb forward tcp:9222 localabstract:${SOCK:-webview_devtools_remote_$PID}
-    node .github/scripts/yt-probe.js results/yt-$MODE-$V.json 75 &
+    timeout 110 node .github/scripts/yt-probe.js results/yt-$MODE-$V.json 75 &
     PROBE=$!
     sleep 20; adb exec-out screencap -p > results/yt-$MODE-$V-a.png
     sleep 25; adb exec-out screencap -p > results/yt-$MODE-$V-b.png
